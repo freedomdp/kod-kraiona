@@ -1,41 +1,34 @@
+//точка входа в приложение
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Код Крайона',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(title: 'Код Крайона'),
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
     );
+    runApp(MyApp());
+  } catch (e) {
+    print('Error initializing Firebase: $e');
+    runApp(ErrorApp(error: e.toString()));
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+class ErrorApp extends StatelessWidget {
+  final String error;
 
-  final String title;
+  const ErrorApp({Key? key, required this.error}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
-      body: const Center(
-        child: Text('Добро пожаловать в Код Крайона!'),
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text('Error: $error'),
+        ),
       ),
     );
   }
