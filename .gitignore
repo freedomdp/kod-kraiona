@@ -43,4 +43,5 @@ app.*.map.json
 /android/app/release
 
 #credentials
-credentials/kod-kraiona-432514-73ca8a27f88f.json
+assets/credentials/kod-kraiona-432514-73ca8a27f88f.json
+assets/credentials/kod-kraiona-432514-73ca8a27f88f.json
