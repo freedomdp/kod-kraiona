@@ -1,30 +1,36 @@
-//логика расчета кода Крайона
-
-class KrayonCodeResult {
-  final int total;
-  final String details;
-
-  KrayonCodeResult(this.total, this.details);
-}
+import 'google_sheets_service.dart';
 
 class KrayonCodeService {
   static const ukrainianAlphabet = 'абвгґдеєжзиіїйклмнопрстуфхцчшщьюя';
+  static late GoogleSheetsService _sheetsService;
 
-  static KrayonCodeResult calculate(String input) {
+  static void setSheetService(GoogleSheetsService service) {
+    _sheetsService = service;
+  }
+
+  static Map<String, dynamic> calculate(String input) {
     int total = 0;
-    String details = '';
+    List<Map<String, dynamic>> details = [];
 
-    try {
-      for (var char in input.toLowerCase().split('')) {
-        if (ukrainianAlphabet.contains(char)) {
-          int number = ukrainianAlphabet.indexOf(char) + 1;
-          total += number;
-          details += '$char: $number\n';
-        }
+    for (var char in input.toLowerCase().split('')) {
+      if (ukrainianAlphabet.contains(char)) {
+        int value = ukrainianAlphabet.indexOf(char) + 1;
+        total += value;
+        details.add({'char': char, 'value': value});
       }
-      return KrayonCodeResult(total, details);
-    } catch (e) {
-      throw Exception('Помилка при розрахунку коду: ${e.toString()}');
     }
+    return {
+      'total': total,
+      'details': details,
+    };
+  }
+
+  static Future<List<String>> findMatchingPhrases(int value) async {
+    return await _sheetsService.findPhrasesByValue(value);
+  }
+
+  static Future<void> addNewPhrase(String phrase) async {
+    int value = calculate(phrase)['total'];
+    await _sheetsService.addPhrase(phrase, value);
   }
 }

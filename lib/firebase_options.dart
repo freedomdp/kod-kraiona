@@ -60,4 +60,5 @@ class DefaultFirebaseOptions {
     authDomain: 'kod-kraiona.firebaseapp.com',
     storageBucket: 'kod-kraiona.appspot.com',
   );
+
 }

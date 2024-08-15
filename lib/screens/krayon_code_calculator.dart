@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/krayon_code_service.dart';
-import '../utils/input_formatters.dart';
 
 class KrayonCodeCalculator extends StatefulWidget {
   const KrayonCodeCalculator({Key? key}) : super(key: key);
@@ -10,35 +10,45 @@ class KrayonCodeCalculator extends StatefulWidget {
 }
 
 class _KrayonCodeCalculatorState extends State<KrayonCodeCalculator> {
-  String _input = '';
-  String _result = '';
   final TextEditingController _controller = TextEditingController();
+  Map<String, dynamic> _result = {};
 
-  void _calculateKrayonCode(String input) {
-    try {
-      final result = KrayonCodeService.calculate(input);
+  // Максимальна ширина додатка
+  static const double maxWidth = 400.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    final input = _controller.text;
+    if (input.isEmpty) {
       setState(() {
-        _result = 'Числовий код Крайона: ${result.total}\n\nДеталі:\n${result.details}';
+        _result = {};
       });
-    } catch (e) {
-      setState(() {
-        _result = 'Помилка: ${e.toString()}';
-      });
+      return;
     }
+
+    final result = KrayonCodeService.calculate(input);
+    setState(() {
+      _result = result;
+    });
   }
 
   void _clearInput() {
     _controller.clear();
     setState(() {
-      _input = '';
-      _result = '';
+      _result = {};
     });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
@@ -50,9 +60,9 @@ class _KrayonCodeCalculatorState extends State<KrayonCodeCalculator> {
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
+          constraints: BoxConstraints(maxWidth: maxWidth),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16.0, 10.0, 16.0, 16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
@@ -61,7 +71,7 @@ class _KrayonCodeCalculatorState extends State<KrayonCodeCalculator> {
                   child: Image.asset(
                     'assets/images/main_image.jpg',
                     height: 200,
-                    width: 200,
+                    width: double.infinity,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -83,44 +93,25 @@ class _KrayonCodeCalculatorState extends State<KrayonCodeCalculator> {
                     ),
                   ),
                   inputFormatters: [
-                    UkrainianTextFormatter(),
-                    LowerCaseTextFormatter(),
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'[а-щьюяґєіїА-ЩЬЮЯҐЄІЇ\s' ']')),
                   ],
-                  onChanged: (value) {
-                    setState(() {
-                      _input = value;
-                    });
-                    _calculateKrayonCode(value);
-                  },
                 ),
                 const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: theme.dividerColor),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: RichText(
-                    text: TextSpan(
-                      style: theme.textTheme.bodyLarge,
-                      children: [
-                        TextSpan(
-                          text: _result.startsWith('Числовий код Крайона:')
-                              ? 'Числовий код Крайона: '
-                              : '',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: theme.colorScheme.secondary,
-                          ),
-                        ),
-                        TextSpan(
-                          text: _result.startsWith('Числовий код Крайона:')
-                              ? _result.substring('Числовий код Крайона: '.length)
-                              : _result,
-                        ),
-                      ],
+                if (_result.isNotEmpty) ...[
+                  Text(
+                    'Розрахований код: ${_result['total']}',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.secondary,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 10),
+                  ...(_result['details'] as List<Map<String, dynamic>>)
+                      .map((detail) => Text(
+                            '${detail['char'].toUpperCase()} - ${detail['value']}',
+                            style: theme.textTheme.bodyMedium,
+                          )),
+                ],
               ],
             ),
           ),

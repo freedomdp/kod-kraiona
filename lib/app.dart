@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
           centerTitle: true,
         ),
       ),
-      home: KrayonCodeCalculator(),
+      home: const KrayonCodeCalculator(),
     );
   }
 }
