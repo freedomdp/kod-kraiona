@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/google_sheets_service.dart';
+import '../services/krayon_code_service.dart';
+import '../widgets/phrases_table.dart';
 import '../config/app_version.dart';
 
 class PhrasesScreen extends StatefulWidget {
@@ -25,6 +27,8 @@ class _PhrasesScreenState extends State<PhrasesScreen> {
       final googleSheetsService = await GoogleSheetsService.getInstance();
       print('GoogleSheetsService instance obtained');
 
+      KrayonCodeService.setSheetService(googleSheetsService);
+
       final phrases = await googleSheetsService.getAllData();
       print('Phrases before setting state: $phrases'); // Лог для проверки загруженных данных
 
@@ -41,19 +45,50 @@ class _PhrasesScreenState extends State<PhrasesScreen> {
     }
   }
 
+  Future<void> _recalculateCodesAndUpload() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final googleSheetsService = await GoogleSheetsService.getInstance();
+      KrayonCodeService.setSheetService(googleSheetsService);
+
+      // Пересчет кодов для всех фраз
+      List<List<String>> updatedPhrases = _phrases.map((phrase) {
+        final newCode = KrayonCodeService.calculate(phrase[0])['total'].toString();
+        return [phrase[0], newCode];
+      }).toList();
+
+      // Обновление данных в Google Sheets
+      await googleSheetsService.updatePhrases(updatedPhrases);
+
+      // Обновление данных на экране
+      setState(() {
+        _phrases = updatedPhrases;
+        _isLoading = false;
+      });
+
+      print('Codes recalculated and updated successfully!');
+    } catch (e) {
+      print('Error recalculating and uploading codes: $e');
+      setState(() {
+        _isLoading = false;
+        _error = 'Помилка оновлення даних: $e';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    print('Rendering data on screen: $_phrases');
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Фрази та їх коди'),
         actions: [
           IconButton(
             icon: const Icon(Icons.calculate),
-            onPressed: () {
-              // Действие при нажатии на кнопку
-              print('Calculator button pressed');
+            onPressed: () async {
+              await _recalculateCodesAndUpload();
             },
           ),
         ],
@@ -68,23 +103,7 @@ class _PhrasesScreenState extends State<PhrasesScreen> {
                   : _phrases.isEmpty
                       ? const Center(
                           child: Text('Немає даних для відображення'))
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SingleChildScrollView(
-                            child: DataTable(
-                              columns: const [
-                                DataColumn(label: Text('Фраза')),
-                                DataColumn(label: Text('Код')),
-                              ],
-                              rows: _phrases.map((phrase) {
-                                return DataRow(cells: [
-                                  DataCell(Text(phrase.isNotEmpty ? phrase[0] : '')),
-                                  DataCell(Text(phrase.length > 1 ? phrase[1] : '')),
-                                ]);
-                              }).toList(),
-                            ),
-                          ),
-                        ),
+                      : PhrasesTable(phrases: _phrases),
           Positioned(
             right: 10,
             bottom: 10,
