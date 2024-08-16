@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/krayon_code_service.dart';
+import '../config/app_version.dart';
+import 'phrases_screen.dart';
 
 class KrayonCodeCalculator extends StatefulWidget {
   const KrayonCodeCalculator({Key? key}) : super(key: key);
@@ -51,17 +53,28 @@ class _KrayonCodeCalculatorState extends State<KrayonCodeCalculator> {
     });
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Код Крайона'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PhrasesScreen()),
+            );
+          },
+        ),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: SingleChildScrollView(
+      body: Stack(
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -116,6 +129,16 @@ class _KrayonCodeCalculatorState extends State<KrayonCodeCalculator> {
             ),
           ),
         ),
+      ),
+          Positioned(
+            right: 10,
+            bottom: 10,
+            child: Text(
+              AppVersion.getFullVersion(),
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+        ],
       ),
     );
   }
