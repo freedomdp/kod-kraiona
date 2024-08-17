@@ -1,6 +1,6 @@
-// основной виджет приложения
 import 'package:flutter/material.dart';
 import 'screens/krayon_code_calculator.dart';
+import 'theme/app_theme.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -9,19 +9,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Код Крайона (українська версія)',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        textTheme: const TextTheme(
-          titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          titleMedium: TextStyle(fontSize: 18),
-          bodyLarge: TextStyle(fontSize: 16),
-          bodyMedium: TextStyle(fontSize: 14),
-        ),
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-        ),
-      ),
+      theme: AppTheme.theme,
       home: const KrayonCodeCalculator(),
     );
   }

@@ -6,7 +6,7 @@ class SearchField extends StatefulWidget {
   final Function(String) onSearch;
   final VoidCallback onClear;
 
-  const SearchField({Key? key, required this.onSearch, required this.onClear}) : super(key: key);
+  const SearchField({super.key, required this.onSearch, required this.onClear});
 
   @override
   _SearchFieldState createState() => _SearchFieldState();

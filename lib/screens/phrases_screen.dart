@@ -4,6 +4,7 @@ import '../services/search_service.dart';
 import '../widgets/phrases_table_widget.dart';
 import '../widgets/search_field.dart';
 import '../services/google_sheets_service.dart';
+import '../theme/app_theme.dart';
 
 class PhrasesScreen extends StatefulWidget {
   const PhrasesScreen({super.key});
@@ -19,7 +20,6 @@ class _PhrasesScreenState extends State<PhrasesScreen> {
   bool _isLoading = true;
   String _error = '';
   bool _isSearching = false;
-  static const double maxWidth = 400.0;
 
   @override
   void initState() {
@@ -93,6 +93,7 @@ class _PhrasesScreenState extends State<PhrasesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -101,7 +102,9 @@ class _PhrasesScreenState extends State<PhrasesScreen> {
             const Text('Фрази та їх коди'),
             Text(
               'база з ${_phrases.length} фраз',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onPrimary.withOpacity(0.7),
+              ),
             ),
           ],
         ),
@@ -114,21 +117,25 @@ class _PhrasesScreenState extends State<PhrasesScreen> {
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
+          constraints: const BoxConstraints(maxWidth: AppTheme.maxWidth),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(AppTheme.padding),
             child: Column(
               children: [
                 SearchField(onSearch: _onSearch, onClear: _clearSearch),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.padding),
                 Expanded(
                   child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _error.isNotEmpty
-                      ? Center(child: Text(_error, style: const TextStyle(color: Colors.red)))
-                      : _phrases.isEmpty && _isSearching
-                        ? const Center(child: Text('За вашим кодом відповідних фраз не знайдено!'))
-                        : PhrasesTableWidget(phrases: _phrases),
+                      ? const Center(child: CircularProgressIndicator())
+                      : _error.isNotEmpty
+                          ? Center(
+                              child: Text(_error,
+                                  style: const TextStyle(color: AppTheme.errorColor)))
+                          : _phrases.isEmpty && _isSearching
+                              ? const Center(
+                                  child: Text(
+                                      'За вашим кодом відповідних фраз не знайдено!'))
+                              : PhrasesTableWidget(phrases: _phrases),
                 ),
               ],
             ),

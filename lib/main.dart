@@ -3,6 +3,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'app.dart';
 import 'services/google_sheets_service.dart';
+import 'package:logging/logging.dart';
+
+final _logger = Logger('MainApp');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,12 +13,12 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    print('Initializing GoogleSheetsService...');
+    _logger.info('Initializing GoogleSheetsService...');
     await GoogleSheetsService.getInstance();
-    print('GoogleSheetsService initialized successfully');
-    runApp(MyApp());
+    _logger.info('GoogleSheetsService initialized successfully');
+    runApp(const MyApp());
   } catch (e) {
-    print('Error initializing app: $e');
+    _logger.severe('Error initializing app', e);
     runApp(ErrorApp(error: e.toString()));
   }
 }
@@ -23,7 +26,7 @@ void main() async {
 class ErrorApp extends StatelessWidget {
   final String error;
 
-  const ErrorApp({Key? key, required this.error}) : super(key: key);
+  const ErrorApp({super.key, required this.error});
 
   @override
   Widget build(BuildContext context) {
