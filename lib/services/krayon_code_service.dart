@@ -3,6 +3,8 @@ import 'google_sheets_service.dart';
 class KrayonCodeService {
   static const ukrainianAlphabet = 'абвгґдеєжзиіїйклмнопрстуфхцчшщьюя';
   static late GoogleSheetsService _sheetsService;
+  static const int minSearchLength = 4;  // Минимальная длина для поиска
+  static const int searchDelay = 3;  // Задержка поиска в секундах
 
   static void setSheetService(GoogleSheetsService service) {
     _sheetsService = service;

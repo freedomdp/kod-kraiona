@@ -15,7 +15,7 @@ dependencies:
   firebase_core: ^2.15.0
   gsheets: ^0.4.2
   http: ^0.13.3
-
+  async: ^2.8.2
 
   cupertino_icons: ^1.0.8
 
@@ -32,4 +32,3 @@ flutter:
 
 
   uses-material-design: true
-
