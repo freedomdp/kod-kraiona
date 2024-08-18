@@ -3,7 +3,7 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - main  # Запускаем сборку и деплой при пуше в основную ветку
+      - main
 
 jobs:
   build_and_deploy:
@@ -11,12 +11,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '2.10.0'
+          flutter-version: '3.x'
+          channel: 'stable'
+
+      - name: Create credentials directory
+        run: mkdir -p assets/credentials
 
       - name: Create credentials.json
         run: echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KOD_KRAIONA }}" > assets/credentials/credentials.json
@@ -28,6 +32,9 @@ jobs:
         run: flutter build web
 
       - name: Deploy to Firebase Hosting
-        run: firebase deploy --only hosting
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KOD_KRAIONA }}
+          channelId: live
+          projectId: kod-kraiona
