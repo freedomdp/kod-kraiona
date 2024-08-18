@@ -5,7 +5,6 @@ import '../events/krayon_code_event.dart';
 import '../states/krayon_code_state.dart';
 import '../widgets/krayon_code_input.dart';
 import '../widgets/krayon_code_result.dart';
-import '../widgets/matching_phrases.dart';
 import '../theme/app_theme.dart';
 import 'phrases_screen.dart';
 
@@ -84,11 +83,9 @@ class KrayonCodeCalculatorViewState extends State<KrayonCodeCalculatorView> {
                     ),
                     const SizedBox(height: AppTheme.padding),
                     if (state.result != null && state.result['total'] != null)
-                      KrayonCodeResult(result: state.result),
-                    if (state.matchingPhrases.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppTheme.padding),
-                        child: MatchingPhrases(phrases: state.matchingPhrases),
+                      KrayonCodeResult(
+                        result: state.result,
+                        matchingPhrases: state.matchingPhrases,
                       ),
                   ],
                 ),

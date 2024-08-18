@@ -2,31 +2,35 @@ import 'package:equatable/equatable.dart';
 
 class PhrasesState extends Equatable {
   final List<List<String>> phrases;
+  final List<List<String>> searchResults;
   final bool isLoading;
+  final bool isSearching;
   final String error;
-  final List<List<String>>? searchResults;
 
   const PhrasesState({
     this.phrases = const [],
+    this.searchResults = const [],
     this.isLoading = false,
+    this.isSearching = false,
     this.error = '',
-    this.searchResults,
   });
 
   PhrasesState copyWith({
     List<List<String>>? phrases,
-    bool? isLoading,
-    String? error,
     List<List<String>>? searchResults,
+    bool? isLoading,
+    bool? isSearching,
+    String? error,
   }) {
     return PhrasesState(
       phrases: phrases ?? this.phrases,
-      isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
       searchResults: searchResults ?? this.searchResults,
+      isLoading: isLoading ?? this.isLoading,
+      isSearching: isSearching ?? this.isSearching,
+      error: error ?? this.error,
     );
   }
 
   @override
-  List<Object?> get props => [phrases, isLoading, error, searchResults];
+  List<Object> get props => [phrases, searchResults, isLoading, isSearching, error];
 }

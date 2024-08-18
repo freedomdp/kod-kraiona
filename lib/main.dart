@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart';
 import 'app.dart';
 import 'services/google_sheets_service.dart';
-import 'services/cache_service.dart';  
+import 'services/cache_service.dart';
 import 'repositories/google_sheets_repository.dart';
+import 'blocs/phrases_bloc.dart';
+import 'events/phrases_event.dart';
 import 'package:logging/logging.dart';
 
 void main() async {
@@ -24,7 +26,7 @@ void main() async {
     );
     logger.info('Initializing GoogleSheetsService...');
     final googleSheetsService = await GoogleSheetsService.getInstance();
-    final cacheService = CacheService();  // Создаем экземпляр CacheService
+    final cacheService = CacheService();
     final googleSheetsRepository = GoogleSheetsRepository(googleSheetsService, cacheService);
 
     logger.info('Loading initial data...');
@@ -32,9 +34,20 @@ void main() async {
     logger.info('Initial data loaded');
 
     runApp(
-      RepositoryProvider(
-        create: (context) => googleSheetsRepository,
-        child: MyApp(repository: googleSheetsRepository),
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<GoogleSheetsRepository>(
+            create: (context) => googleSheetsRepository,
+          ),
+        ],
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider<PhrasesBloc>(
+              create: (context) => PhrasesBloc(context.read<GoogleSheetsRepository>())..add(LoadPhrases()),
+            ),
+          ],
+          child: const MyApp(),
+        ),
       ),
     );
   } catch (e) {

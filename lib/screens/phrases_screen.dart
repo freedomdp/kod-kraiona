@@ -52,7 +52,9 @@ class PhrasesScreen extends StatelessWidget {
                           ? const Center(child: CircularProgressIndicator())
                           : state.error.isNotEmpty
                               ? Center(child: Text(state.error, style: const TextStyle(color: AppTheme.errorColor)))
-                              : PhrasesTableWidget(phrases: state.phrases),
+                              : state.isSearching
+                                  ? PhrasesTableWidget(phrases: state.searchResults)
+                                  : PhrasesTableWidget(phrases: state.phrases),
                     ),
                   ],
                 ),

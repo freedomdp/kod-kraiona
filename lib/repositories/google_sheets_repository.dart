@@ -58,7 +58,7 @@ class GoogleSheetsRepository {
   Future<List<String>> findPhrasesByValue(int value) async {
     final allData = await getAllData();
     return allData
-        .where((row) => row.length > 1 && int.parse(row[1]) == value)
+        .where((row) => row.length > 1 && int.tryParse(row[1]) == value)
         .map((row) => row[0])
         .toList();
   }
