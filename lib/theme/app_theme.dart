@@ -8,7 +8,7 @@ class AppTheme {
   static const Color textColor = Colors.black87;
   static const Color secondaryTextColor = Colors.black54;
   static const Color errorColor = Colors.red;
-
+  static const Color tableHeaderColor = Colors.grey;
   // Размеры
   static const double maxWidth = 400.0;
   static const double borderRadius = 8.0;
@@ -16,9 +16,9 @@ class AppTheme {
 
 
   // Тема приложения
-  static ThemeData get theme {
+    static ThemeData get theme {
     return ThemeData(
-      primarySwatch: Colors.blue, // Используем предопределенный MaterialColor
+      primarySwatch: Colors.blue,
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
         secondary: accentColor,
@@ -28,24 +28,15 @@ class AppTheme {
       scaffoldBackgroundColor: backgroundColor,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       textTheme: const TextTheme(
-        titleLarge: headerStyle,
-        titleMedium: subHeaderStyle,
-        bodyLarge: bodyStyle,
+        titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
+        titleMedium: TextStyle(fontSize: 18, color: textColor),
+        bodyLarge: TextStyle(fontSize: 16, color: textColor),
         bodyMedium: smallBodyStyle,
       ),
       appBarTheme: const AppBarTheme(
         centerTitle: true,
         backgroundColor: primaryColor,
         foregroundColor: backgroundColor,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
-          borderSide: const BorderSide(color: primaryColor, width: 2),
-        ),
       ),
     );
   }

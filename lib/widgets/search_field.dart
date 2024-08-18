@@ -9,10 +9,10 @@ class SearchField extends StatefulWidget {
   const SearchField({super.key, required this.onSearch, required this.onClear});
 
   @override
-  _SearchFieldState createState() => _SearchFieldState();
+  SearchFieldState createState() => SearchFieldState();
 }
 
-class _SearchFieldState extends State<SearchField> {
+class SearchFieldState extends State<SearchField> {
   final TextEditingController _controller = TextEditingController();
   Timer? _debounce;
 

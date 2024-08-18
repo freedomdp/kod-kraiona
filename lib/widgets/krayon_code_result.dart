@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class KrayonCodeResult extends StatelessWidget {
   final Map<String, dynamic> result;
@@ -7,24 +8,19 @@ class KrayonCodeResult extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Розрахований код: ${result['total']}',
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: theme.colorScheme.secondary,
+    return RichText(
+      text: TextSpan(
+        style: Theme.of(context).textTheme.titleLarge,
+        children: [
+          const TextSpan(
+              text: 'Розрахований код: ',
+              style: TextStyle(color: AppTheme.accentColor)),
+          TextSpan(
+            text: '${result['total']}',
+            style: const TextStyle(color: AppTheme.accentColor),
           ),
-        ),
-        // вывод кодов на каждый симовол
-        //const SizedBox(height: 10),
-        //...(result['details'] as List<Map<String, dynamic>>)
-        //    .map((detail) => Text(
-        //          '${detail['char'].toUpperCase()} - ${detail['value']}',
-        //          style: theme.textTheme.bodyMedium,
-        //        )),
-      ],
+        ],
+      ),
     );
   }
 }

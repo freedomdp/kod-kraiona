@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class MatchingPhrases extends StatelessWidget {
   final List<String> phrases;
@@ -7,27 +8,30 @@ class MatchingPhrases extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    if (phrases.isEmpty) {
-      return Text(
-        'Відповідних словосполучень не знайдено',
-        style: theme.textTheme.bodyMedium,
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Відповідні словосполучення:',
-          style: theme.textTheme.titleMedium,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Відповідні словосполучення:', style: Theme.of(context).textTheme.titleMedium),
+            IconButton(
+              icon: const Icon(Icons.copy),
+              onPressed: () {
+                // TODO: Implement copy functionality
+              },
+            ),
+          ],
         ),
-        const SizedBox(height: 10),
-        ...phrases.map((phrase) => Text(
-          phrase,
-          style: theme.textTheme.bodyMedium,
-        )),
+        const SizedBox(height: AppTheme.padding / 2),
+        Wrap(
+          spacing: AppTheme.padding,
+          runSpacing: AppTheme.padding / 2,
+          children: phrases.map((phrase) => SizedBox(
+            width: (MediaQuery.of(context).size.width - 3 * AppTheme.padding) / 2,
+            child: Text(phrase, style: AppTheme.smallBodyStyle),
+          )).toList(),
+        ),
       ],
     );
   }

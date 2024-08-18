@@ -1,6 +1,9 @@
 import 'package:gsheets/gsheets.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
+import 'package:logging/logging.dart';
+
+final _logger = Logger('GoogleSheetsService');
 
 class GoogleSheetsService {
   static late GSheets _gsheets;
@@ -8,45 +11,71 @@ class GoogleSheetsService {
 
   GoogleSheetsService._();
 
+  // Инициализирует сервис Google Sheets
   static Future<GoogleSheetsService> getInstance() async {
-    // Загружаем содержимое файла как строку
-    final String response = await rootBundle.loadString('assets/credentials/credentials.json');
-    // Парсим JSON
-    final data = await json.decode(response);
-    // Создаем экземпляр GSheets, используя распарсенные данные
-    _gsheets = GSheets(data);
-    _spreadsheet = await _gsheets
-        .spreadsheet("1yvlp4qH8pJtFk5RecVJEJw0RiN8zmz7NdeqAt_cFaDc");
-    return GoogleSheetsService._();
+    try {
+      _logger.info('Loading credentials...');
+      final String response = await rootBundle.loadString('assets/credentials/credentials.json');
+      _logger.info('Credentials loaded successfully');
+
+      _logger.info('Parsing JSON...');
+      final data = await json.decode(response);
+      _logger.info('JSON parsed successfully');
+
+      _logger.info('Initializing GSheets...');
+      _gsheets = GSheets(data);
+      _logger.info('GSheets initialized successfully');
+
+      _logger.info('Accessing spreadsheet...');
+      _spreadsheet = await _gsheets.spreadsheet("1yvlp4qH8pJtFk5RecVJEJw0RiN8zmz7NdeqAt_cFaDc");
+      _logger.info('Spreadsheet accessed successfully');
+
+      return GoogleSheetsService._();
+    } catch (e) {
+      _logger.severe('Error in getInstance: $e');
+      rethrow;
+    }
   }
 
+  // Получает все данные из листа 'ukr'
   Future<List<List<String>>> getAllData() async {
-    final sheet = _spreadsheet.worksheetByTitle('ukr');
-    return await sheet!.values.allRows();
+    try {
+      _logger.info('Getting worksheet...');
+      final sheet = _spreadsheet.worksheetByTitle('ukr');
+      if (sheet == null) {
+        _logger.warning('Worksheet "ukr" not found');
+        return [];
+      }
+      _logger.info('Worksheet obtained successfully');
+
+      _logger.info('Fetching all rows...');
+      final rows = await sheet.values.allRows();
+      _logger.info('Fetched ${rows.length} rows successfully');
+
+      return rows;
+    } catch (e) {
+      _logger.severe('Error in getAllData: $e');
+      rethrow;
+    }
   }
 
+  // Обновляет фразы в листе 'ukr'
   Future<void> updatePhrases(List<List<String>> updatedPhrases) async {
     final sheet = _spreadsheet.worksheetByTitle('ukr');
-
-    // Сортировка фраз по коду (второй столбец) от меньшего к большему
     var sortedPhrases = _sortData(updatedPhrases);
-
-    // Очистка листа перед вставкой отсортированных данных
     await sheet!.clear();
-
-    // Вставка отсортированных данных
     await sheet.values.insertRows(1, sortedPhrases);
   }
 
+  // Добавляет новую фразу в лист 'ukr'
   Future<void> addPhrase(String phrase, int value) async {
     final sheet = _spreadsheet.worksheetByTitle('ukr');
     await sheet!.values.appendRow([phrase, value.toString()]);
-
-    // После добавления новой фразы, пересортируем и обновим весь лист
     var allData = await getAllData();
     await updatePhrases(allData);
   }
 
+  // Ищет фразы по заданному значению
   Future<List<String>> findPhrasesByValue(int value) async {
     final sheet = _spreadsheet.worksheetByTitle('ukr');
     final allRows = await sheet!.values.allRows();
@@ -56,13 +85,14 @@ class GoogleSheetsService {
         .toList();
   }
 
-  // Добавляем новый метод clearSheet
+  // Очищает лист 'ukr'
   Future<void> clearSheet() async {
     final sheet = _spreadsheet.worksheetByTitle('ukr');
     await sheet!.clear();
   }
 
-    List<List<String>> _sortData(List<List<String>> data) {
+  // Сортирует данные по второму столбцу (коду)
+  List<List<String>> _sortData(List<List<String>> data) {
     return data..sort((a, b) {
       if (a.length < 2 || b.length < 2) return 0;
       return int.parse(a[1]).compareTo(int.parse(b[1]));

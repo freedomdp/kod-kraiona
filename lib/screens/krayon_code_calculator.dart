@@ -1,116 +1,40 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-import '../services/krayon_code_service.dart';
-import '../services/google_sheets_service.dart';
-import 'phrases_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/krayon_code_bloc.dart';
+import '../events/krayon_code_event.dart';
+import '../states/krayon_code_state.dart';
 import '../widgets/krayon_code_input.dart';
 import '../widgets/krayon_code_result.dart';
 import '../widgets/matching_phrases.dart';
 import '../theme/app_theme.dart';
+import 'phrases_screen.dart';
 
-class KrayonCodeCalculator extends StatefulWidget {
+class KrayonCodeCalculator extends StatelessWidget {
   const KrayonCodeCalculator({super.key});
 
   @override
-  _KrayonCodeCalculatorState createState() => _KrayonCodeCalculatorState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => KrayonCodeBloc(context.read()),
+      child: const KrayonCodeCalculatorView(),
+    );
+  }
 }
 
-class _KrayonCodeCalculatorState extends State<KrayonCodeCalculator> {
-  final TextEditingController _controller = TextEditingController();
-  Map<String, dynamic> _result = {};
-  List<String> _matchingPhrases = [];
-  Timer? _debounce;
-  bool _isInitialized = false;
-  bool _isSearching = false;
+class KrayonCodeCalculatorView extends StatefulWidget {
+  const KrayonCodeCalculatorView({super.key});
 
   @override
-  void initState() {
-    super.initState();
-    _initializeServices();
-    _controller.addListener(_onTextChanged);
-  }
+  KrayonCodeCalculatorViewState createState() => KrayonCodeCalculatorViewState();
+}
 
-  @override
-  void dispose() {
-    _controller.removeListener(_onTextChanged);
-    _controller.dispose();
-    _debounce?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _initializeServices() async {
-    if (!_isInitialized) {
-      try {
-        final googleSheetsService = await GoogleSheetsService.getInstance();
-        KrayonCodeService.setSheetService(googleSheetsService);
-        setState(() {
-          _isInitialized = true;
-        });
-      } catch (e) {
-        print('Error initializing services: $e');
-      }
-    }
-  }
-
-  void _onTextChanged() {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(seconds: KrayonCodeService.searchDelay), () {
-      final input = _controller.text;
-      if (input.isEmpty) {
-        setState(() {
-          _result = {};
-          _matchingPhrases = [];
-          _isSearching = false;
-        });
-        return;
-      }
-
-      final result = KrayonCodeService.calculate(input);
-      setState(() {
-        _result = result;
-      });
-
-      if (input.length >= KrayonCodeService.minSearchLength) {
-        _searchMatchingPhrases(result['total']);
-      } else {
-        setState(() {
-          _matchingPhrases = [];
-          _isSearching = false;
-        });
-      }
-    });
-  }
-
-  void _searchMatchingPhrases(int code) async {
-    setState(() {
-      _isSearching = true;
-    });
-
-    if (!_isInitialized) {
-      await _initializeServices();
-    }
-    try {
-      final phrases = await KrayonCodeService.findMatchingPhrases(code);
-      setState(() {
-        _matchingPhrases = phrases;
-        _isSearching = false;
-      });
-    } catch (e) {
-      print('Error searching matching phrases: $e');
-      setState(() {
-        _matchingPhrases = [];
-        _isSearching = false;
-      });
-    }
+class KrayonCodeCalculatorViewState extends State<KrayonCodeCalculatorView> {
+  void _onTextChanged(String text) {
+    context.read<KrayonCodeBloc>().add(CalculateCode(text));
   }
 
   void _clearInput() {
-    _controller.clear();
-    setState(() {
-      _result = {};
-      _matchingPhrases = [];
-      _isSearching = false;
-    });
+    context.read<KrayonCodeBloc>().add(ClearInput());
   }
 
   @override
@@ -128,47 +52,50 @@ class _KrayonCodeCalculatorState extends State<KrayonCodeCalculator> {
           },
         ),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: AppTheme.maxWidth),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppTheme.padding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-                  child: Image.asset(
-                    'assets/images/main_image.jpg',
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+      body: BlocBuilder<KrayonCodeBloc, KrayonCodeState>(
+        builder: (context, state) {
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: AppTheme.maxWidth),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppTheme.padding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                      child: Image.asset(
+                        'assets/images/main_image.jpg',
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.padding),
+                    Text(
+                      'Калькулятор (українська версія)',
+                      style: Theme.of(context).textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppTheme.padding),
+                    KrayonCodeInput(
+                      onTextChanged: _onTextChanged,
+                      onClear: _clearInput,
+                    ),
+                    const SizedBox(height: AppTheme.padding),
+                    if (state.result != null && state.result['total'] != null)
+                      KrayonCodeResult(result: state.result),
+                    if (state.matchingPhrases.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppTheme.padding),
+                        child: MatchingPhrases(phrases: state.matchingPhrases),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: AppTheme.padding),
-                Text(
-                  'Калькулятор (українська версія)',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppTheme.padding),
-                KrayonCodeInput(
-                  controller: _controller,
-                  onClear: _clearInput,
-                ),
-                const SizedBox(height: AppTheme.padding),
-                if (_result.isNotEmpty) ...[
-                  KrayonCodeResult(result: _result),
-                  const SizedBox(height: AppTheme.padding),
-                  if (_isSearching)
-                    const Center(child: CircularProgressIndicator())
-                  else
-                    MatchingPhrases(phrases: _matchingPhrases),
-                ],
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

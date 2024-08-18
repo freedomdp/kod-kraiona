@@ -1,24 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart';
 import 'app.dart';
 import 'services/google_sheets_service.dart';
+import 'services/cache_service.dart';  
+import 'repositories/google_sheets_repository.dart';
 import 'package:logging/logging.dart';
-
-final _logger = Logger('MainApp');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen((record) {
+    debugPrint('${record.level.name}: ${record.time}: ${record.message}');
+  });
+
+  final logger = Logger('MainApp');
+
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    _logger.info('Initializing GoogleSheetsService...');
-    await GoogleSheetsService.getInstance();
-    _logger.info('GoogleSheetsService initialized successfully');
-    runApp(const MyApp());
+    logger.info('Initializing GoogleSheetsService...');
+    final googleSheetsService = await GoogleSheetsService.getInstance();
+    final cacheService = CacheService();  // Создаем экземпляр CacheService
+    final googleSheetsRepository = GoogleSheetsRepository(googleSheetsService, cacheService);
+
+    logger.info('Loading initial data...');
+    await googleSheetsRepository.getAllData();
+    logger.info('Initial data loaded');
+
+    runApp(
+      RepositoryProvider(
+        create: (context) => googleSheetsRepository,
+        child: MyApp(repository: googleSheetsRepository),
+      ),
+    );
   } catch (e) {
-    _logger.severe('Error initializing app', e);
+    logger.severe('Error initializing app', e);
     runApp(ErrorApp(error: e.toString()));
   }
 }

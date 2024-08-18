@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class PhrasesTableWidget extends StatelessWidget {
   final List<List<String>> phrases;
@@ -16,9 +17,9 @@ class PhrasesTableWidget extends StatelessWidget {
           1: FlexColumnWidth(1),
         },
         children: [
-          TableRow(
-            decoration: BoxDecoration(color: Colors.grey.shade200),
-            children: const [
+          const TableRow(
+            decoration: BoxDecoration(color: AppTheme.tableHeaderColor),
+            children: [
               TableCell(child: Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text('Фраза', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -33,14 +34,14 @@ class PhrasesTableWidget extends StatelessWidget {
             children: [
               TableCell(child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(phrase.isNotEmpty ? phrase[0] : ''),
+                child: Text(phrase.isNotEmpty ? phrase[0] : '', style: AppTheme.smallBodyStyle),
               )),
               TableCell(child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(phrase.length > 1 ? phrase[1] : ''),
+                child: Text(phrase.length > 1 ? phrase[1] : '', style: AppTheme.smallBodyStyle),
               )),
             ],
-          )).toList(),
+          )),
         ],
       ),
     );
