@@ -56,39 +56,36 @@ class KrayonCodeCalculatorViewState extends State<KrayonCodeCalculatorView> {
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: AppTheme.maxWidth),
-              child: SingleChildScrollView(
+              child: ListView(
                 padding: const EdgeInsets.all(AppTheme.padding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-                      child: Image.asset(
-                        'assets/images/main_image.jpg',
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
+                children: <Widget>[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                    child: Image.asset(
+                      'assets/images/main_image.jpg',
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
-                    const SizedBox(height: AppTheme.padding),
-                    Text(
-                      'Калькулятор (українська версія)',
-                      style: Theme.of(context).textTheme.titleMedium,
-                      textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppTheme.padding),
+                  Text(
+                    'Калькулятор (українська версія)',
+                    style: Theme.of(context).textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppTheme.padding),
+                  KrayonCodeInput(
+                    onTextChanged: _onTextChanged,
+                    onClear: _clearInput,
+                  ),
+                  const SizedBox(height: AppTheme.padding),
+                  if (state.result != null && state.result['total'] != null)
+                    KrayonCodeResult(
+                      result: state.result,
+                      matchingPhrases: state.matchingPhrases,
                     ),
-                    const SizedBox(height: AppTheme.padding),
-                    KrayonCodeInput(
-                      onTextChanged: _onTextChanged,
-                      onClear: _clearInput,
-                    ),
-                    const SizedBox(height: AppTheme.padding),
-                    if (state.result != null && state.result['total'] != null)
-                      KrayonCodeResult(
-                        result: state.result,
-                        matchingPhrases: state.matchingPhrases,
-                      ),
-                  ],
-                ),
+                ],
               ),
             ),
           );

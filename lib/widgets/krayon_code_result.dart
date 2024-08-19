@@ -59,8 +59,8 @@ class KrayonCodeResult extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 4,
-        crossAxisSpacing: AppTheme.padding / 4,
+        childAspectRatio: 3, // Уменьшено для обеспечения переноса текста
+        crossAxisSpacing: AppTheme.padding,
         mainAxisSpacing: AppTheme.padding / 8,
       ),
       itemCount: matchingPhrases.length,
@@ -68,7 +68,8 @@ class KrayonCodeResult extends StatelessWidget {
         return Text(
           matchingPhrases[index],
           style: AppTheme.smallBodyStyle,
-          overflow: TextOverflow.ellipsis,
+          overflow: TextOverflow.visible, // Изменено для переноса текста
+          softWrap: true, // Добавлено для переноса текста
         );
       },
     );
@@ -78,7 +79,10 @@ class KrayonCodeResult extends StatelessWidget {
     final String textToCopy = matchingPhrases.join(', ');
     Clipboard.setData(ClipboardData(text: textToCopy));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Скопійовано в буфер обміну')),
+      const SnackBar(
+        content: Text('Скопійовано в буфер обміну'),
+        backgroundColor: AppTheme.primaryColor,
+      ),
     );
   }
 }

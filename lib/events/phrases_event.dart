@@ -1,21 +1,12 @@
-import 'package:equatable/equatable.dart';
-
-abstract class PhrasesEvent extends Equatable {
-  const PhrasesEvent();
-
-  @override
-  List<Object> get props => [];
-}
+abstract class PhrasesEvent {}
 
 class LoadPhrases extends PhrasesEvent {}
 
+class LoadMorePhrases extends PhrasesEvent {}
+
 class SearchPhrases extends PhrasesEvent {
   final String code;
-
-  const SearchPhrases(this.code);
-
-  @override
-  List<Object> get props => [code];
+  SearchPhrases(this.code);
 }
 
 class RecalculateAndUpload extends PhrasesEvent {}

@@ -39,11 +39,17 @@ void main() async {
           RepositoryProvider<GoogleSheetsRepository>(
             create: (context) => googleSheetsRepository,
           ),
+          RepositoryProvider<CacheService>(
+            create: (context) => cacheService,
+          ),
         ],
         child: MultiBlocProvider(
           providers: [
             BlocProvider<PhrasesBloc>(
-              create: (context) => PhrasesBloc(context.read<GoogleSheetsRepository>())..add(LoadPhrases()),
+              create: (context) => PhrasesBloc(
+                context.read<GoogleSheetsRepository>(),
+                context.read<CacheService>(),
+              )..add(LoadPhrases()),
             ),
           ],
           child: const MyApp(),

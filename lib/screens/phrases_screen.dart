@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:developer' as developer;
 import '../blocs/phrases_bloc.dart';
 import '../events/phrases_event.dart';
 import '../states/phrases_state.dart';
@@ -12,7 +13,10 @@ class PhrasesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PhrasesBloc, PhrasesState>(
+    return BlocConsumer<PhrasesBloc, PhrasesState>(
+      listener: (context, state) {
+        developer.log('PhrasesState updated: ${state.phrases.length} phrases, isLoading: ${state.isLoading}');
+      },
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
@@ -21,7 +25,7 @@ class PhrasesScreen extends StatelessWidget {
               children: [
                 const Text('Фрази та їх коди'),
                 Text(
-                  'база з ${state.phrases.length} фраз',
+                  'база з ${state.allPhrases.length} фраз',
                   style: AppTheme.smallBodyStyle.copyWith(
                     color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
                   ),
@@ -31,7 +35,15 @@ class PhrasesScreen extends StatelessWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.calculate),
-                onPressed: () => context.read<PhrasesBloc>().add(RecalculateAndUpload()),
+                onPressed: () {
+                  context.read<PhrasesBloc>().add(RecalculateAndUpload());
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Обробка даних, зачекайте оновлення сторінки'),
+                      backgroundColor: AppTheme.primaryColor,
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -48,13 +60,19 @@ class PhrasesScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: AppTheme.padding),
                     Expanded(
-                      child: state.isLoading
+                      child: state.isLoading && state.phrases.isEmpty
                           ? const Center(child: CircularProgressIndicator())
                           : state.error.isNotEmpty
                               ? Center(child: Text(state.error, style: const TextStyle(color: AppTheme.errorColor)))
-                              : state.isSearching
-                                  ? PhrasesTableWidget(phrases: state.searchResults)
-                                  : PhrasesTableWidget(phrases: state.phrases),
+                              : PhrasesTableWidget(
+                                  phrases: state.isSearching ? state.searchResults : state.phrases,
+                                  hasReachedMax: state.hasReachedMax,
+                                  onLoadMore: () async {
+                                    if (!state.isSearching && !state.hasReachedMax) {
+                                      context.read<PhrasesBloc>().add(LoadMorePhrases());
+                                    }
+                                  },
+                                ),
                     ),
                   ],
                 ),
