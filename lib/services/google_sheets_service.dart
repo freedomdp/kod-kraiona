@@ -1,6 +1,7 @@
 import 'package:gsheets/gsheets.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
+import 'dart:math' show min; 
 import 'package:logging/logging.dart';
 
 final _logger = Logger('GoogleSheetsService');
@@ -15,19 +16,30 @@ class GoogleSheetsService {
   static Future<GoogleSheetsService> getInstance() async {
     try {
       _logger.info('Loading credentials...');
-      final String response = await rootBundle.loadString('assets/credentials/credentials.json');
-      _logger.info('Credentials loaded successfully');
+      final String response =
+          await rootBundle.loadString('assets/credentials/credentials.json');
+      _logger.info(
+          'Credentials loaded successfully. Raw content (first 100 chars): ${response.substring(0, min(100, response.length))}');
 
       _logger.info('Parsing JSON...');
-      final data = await json.decode(response);
-      _logger.info('JSON parsed successfully');
+      dynamic data;
+      try {
+        data = json.decode(response);
+        _logger.info(
+            'JSON parsed successfully. Keys: ${(data as Map<String, dynamic>).keys.join(", ")}');
+      } catch (parseError) {
+        _logger.severe('Error parsing JSON: $parseError');
+        _logger.info('Full raw content: $response');
+        rethrow;
+      }
 
       _logger.info('Initializing GSheets...');
       _gsheets = GSheets(data);
       _logger.info('GSheets initialized successfully');
 
       _logger.info('Accessing spreadsheet...');
-      _spreadsheet = await _gsheets.spreadsheet("1yvlp4qH8pJtFk5RecVJEJw0RiN8zmz7NdeqAt_cFaDc");
+      _spreadsheet = await _gsheets
+          .spreadsheet("1yvlp4qH8pJtFk5RecVJEJw0RiN8zmz7NdeqAt_cFaDc");
       _logger.info('Spreadsheet accessed successfully');
 
       return GoogleSheetsService._();
@@ -93,9 +105,10 @@ class GoogleSheetsService {
 
   // Сортирует данные по второму столбцу (коду)
   List<List<String>> _sortData(List<List<String>> data) {
-    return data..sort((a, b) {
-      if (a.length < 2 || b.length < 2) return 0;
-      return int.parse(a[1]).compareTo(int.parse(b[1]));
-    });
+    return data
+      ..sort((a, b) {
+        if (a.length < 2 || b.length < 2) return 0;
+        return int.parse(a[1]).compareTo(int.parse(b[1]));
+      });
   }
 }
