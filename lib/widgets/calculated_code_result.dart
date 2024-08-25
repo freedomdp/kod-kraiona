@@ -6,10 +6,10 @@ class CalculatedCodeResult extends StatelessWidget {
   final VoidCallback onCopy;
 
   const CalculatedCodeResult({
-    Key? key,
+    super.key,
     required this.code,
     required this.onCopy,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class CalculatedCodeResult extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
                 children: [
-                  const TextSpan(text: 'Розрахований код: ', style:  TextStyle(fontWeight: FontWeight.bold)),
+                  const TextSpan(text: 'Розрахований код: '),
                   TextSpan(
                     text: '$code',
                     style: const TextStyle(fontWeight: FontWeight.bold),

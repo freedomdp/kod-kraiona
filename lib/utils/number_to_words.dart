@@ -95,7 +95,7 @@ class NumberToWords {
     }
 
     if (number > 0) {
-      result += _units[number] + ' ';
+      result += '${_units[number]} ';
     }
 
     return result;

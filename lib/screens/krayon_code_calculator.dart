@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/krayon_code_input.dart';
 import '../widgets/calculated_code_result.dart';
-import '../widgets/matching_phrases_result.dart';
+import '../widgets/first_level_result.dart';
 import '../widgets/second_level_result.dart';
 import '../theme/app_theme.dart';
 import '../blocs/krayon_code_bloc.dart';
@@ -12,7 +12,7 @@ import 'phrases_screen.dart';
 import 'package:flutter/services.dart';
 
 class KrayonCodeCalculator extends StatelessWidget {
-  const KrayonCodeCalculator({Key? key}) : super(key: key);
+  const KrayonCodeCalculator({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -71,9 +71,11 @@ class KrayonCodeCalculator extends StatelessWidget {
                           onCopy: () => _copyToClipboard(context, state),
                         ),
                       if (state.matchingPhrases.isNotEmpty)
-                        MatchingPhrasesResult(phrases: state.matchingPhrases),
-                      if (state.result.isNotEmpty &&
-                          state.result['total'] != null)
+                        FirstLevelResult(
+                          code: state.result['total'],
+                          phrases: state.matchingPhrases,
+                        ),
+                      if (state.secondLevelPhrase.isNotEmpty)
                         SecondLevelResult(
                           phrase: state.secondLevelPhrase,
                           code: state.secondLevelResult['total'],
