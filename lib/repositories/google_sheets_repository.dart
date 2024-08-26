@@ -6,40 +6,26 @@ import 'package:logging/logging.dart';
 final _logger = Logger('GoogleSheetsRepository');
 
 class GoogleSheetsRepository {
-  final GoogleSheetsService _service;
+  final GoogleSheetsService? _service;
   final CacheService _cacheService;
-  List<List<String>>? _cachedData;
 
   GoogleSheetsRepository(this._service, this._cacheService);
 
   Future<List<List<String>>> getAllData({bool forceRefresh = false}) async {
-    try {
-      if (!forceRefresh && _cachedData != null) {
-        _logger.info('Returning data from memory cache, ${_cachedData!.length} rows');
-        return _cachedData!;
+    if (_service == null || !forceRefresh) {
+      final cachedData = await _cacheService.getCachedData();
+      if (cachedData != null) {
+        return cachedData;
       }
-
-      if (!forceRefresh) {
-        _logger.info('Trying to get data from cache...');
-        final cachedData = await _cacheService.getCachedData();
-        if (cachedData != null && cachedData.isNotEmpty) {
-          _logger.info('Data found in cache, returning ${cachedData.length} rows');
-          _cachedData = cachedData;
-          return cachedData;
-        }
-        _logger.info('No data found in cache or cache is empty');
-      }
-
-      _logger.info('Fetching data from Google Sheets...');
-      final data = await _service.getAllData();
-      _logger.info('Data fetched successfully, caching ${data.length} rows');
-      await _cacheService.cacheData(data);
-      _cachedData = data;
-      return data;
-    } catch (e, stackTrace) {
-      _logger.severe('Error in getAllData: $e\nStackTrace: $stackTrace');
-      rethrow;
     }
+
+    if (_service == null) {
+      throw Exception('No internet connection and no cached data available');
+    }
+
+    final data = await _service.getAllData();
+    await _cacheService.cacheData(data);
+    return data;
   }
 
   Future<void> recalculateAndUpload() async {
@@ -59,10 +45,11 @@ class GoogleSheetsRepository {
           .toList()
         ..sort((a, b) => int.parse(a[1]).compareTo(int.parse(b[1])));
 
-      await _service.clearSheet();
-      await _service.updatePhrases(updatedData);
+      if (_service != null) {
+        await _service.clearSheet();
+        await _service.updatePhrases(updatedData);
+      }
       await _cacheService.cacheData(updatedData);
-      _cachedData = updatedData;
     } catch (e, stackTrace) {
       _logger.severe('Error in recalculateAndUpload: $e\nStackTrace: $stackTrace');
       rethrow;

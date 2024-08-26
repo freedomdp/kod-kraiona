@@ -1,7 +1,7 @@
 import 'package:gsheets/gsheets.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
-import 'dart:math' show min; 
+import 'dart:math' show min;
 import 'package:logging/logging.dart';
 
 final _logger = Logger('GoogleSheetsService');
@@ -49,6 +49,18 @@ class GoogleSheetsService {
     }
   }
 
+  Future<T> retry<T>(Future<T> Function() operation, {int maxAttempts = 3}) async {
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await operation();
+      } catch (e) {
+        if (attempt == maxAttempts) rethrow;
+        await Future.delayed(Duration(seconds: 2 * attempt));
+      }
+    }
+    throw Exception('Max retry attempts reached');
+  }
+  
   // Получает все данные из листа 'ukr'
   Future<List<List<String>>> getAllData() async {
     try {

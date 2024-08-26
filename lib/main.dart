@@ -10,6 +10,7 @@ import 'blocs/phrases_bloc.dart';
 import 'blocs/krayon_code_bloc.dart';
 import 'events/phrases_event.dart';
 import 'package:logging/logging.dart';
+import 'utils/network_utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,22 +26,28 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    logger.info('Initializing GoogleSheetsService...');
-    final googleSheetsService = await GoogleSheetsService.getInstance();
-    final cacheService = CacheService();
-    await cacheService.clearCache(); // Очистка кэша при запуске
-    final googleSheetsRepository =
-        GoogleSheetsRepository(googleSheetsService, cacheService);
 
-    logger.info('Loading initial data...');
-    await googleSheetsRepository.getAllData();
-    logger.info('Initial data loaded');
+    final cacheService = CacheService();
+    GoogleSheetsRepository? googleSheetsRepository;
+
+    if (await NetworkUtils.checkInternetConnection()) {
+      logger.info('Initializing GoogleSheetsService...');
+      final googleSheetsService = await GoogleSheetsService.getInstance();
+      googleSheetsRepository = GoogleSheetsRepository(googleSheetsService, cacheService);
+
+      logger.info('Loading initial data...');
+      await googleSheetsRepository.getAllData(forceRefresh: true);
+      logger.info('Initial data loaded');
+    } else {
+      logger.info('No internet connection. Using cached data...');
+      googleSheetsRepository = GoogleSheetsRepository(null, cacheService);
+    }
 
     runApp(
       MultiRepositoryProvider(
         providers: [
           RepositoryProvider<GoogleSheetsRepository>(
-            create: (context) => googleSheetsRepository,
+            create: (context) => googleSheetsRepository!,
           ),
           RepositoryProvider<CacheService>(
             create: (context) => cacheService,
@@ -69,7 +76,6 @@ void main() async {
     runApp(ErrorApp(error: e.toString()));
   }
 }
-
 class ErrorApp extends StatelessWidget {
   final String error;
 
@@ -80,7 +86,19 @@ class ErrorApp extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         body: Center(
-          child: Text('Error: $error'),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: $error'),
+              ElevatedButton(
+                onPressed: () {
+                  // Перезапуск приложения
+                  main();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       ),
     );

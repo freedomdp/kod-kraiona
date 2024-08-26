@@ -1,9 +1,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:logging/logging.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class CacheService {
   static const String _cacheKey = 'phrases_cache';
+  static const String _versionKey = 'app_version';
   final Logger _logger = Logger('CacheService');
 
   Future<void> cacheData(List<List<String>> data) async {
@@ -11,16 +13,23 @@ class CacheService {
       final jsonData = json.encode(data);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_cacheKey, jsonData);
+      await _saveCurrentVersion();
       _logger.info('Data successfully cached');
     } catch (e) {
       _logger.severe('Error caching data: $e');
-      await clearCache(); // Очищаем кэш при ошибке сохранения
-      rethrow; // Перебрасываем исключение для обработки на уровне выше
+      await clearCache();
+      rethrow;
     }
   }
 
   Future<List<List<String>>?> getCachedData() async {
     try {
+      if (!await _isVersionValid()) {
+        _logger.info('App version changed, clearing cache');
+        await clearCache();
+        return null;
+      }
+
       final prefs = await SharedPreferences.getInstance();
       final jsonData = prefs.getString(_cacheKey);
       if (jsonData != null) {
@@ -45,6 +54,7 @@ class CacheService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_cacheKey);
+      await prefs.remove(_versionKey);
       _logger.info('Cache cleared successfully');
     } catch (e) {
       _logger.severe('Error clearing cache: $e');
@@ -52,17 +62,32 @@ class CacheService {
   }
 
   bool _isValidData(List<List<String>> data) {
-    // Проверка структуры и содержимого данных
     return data.isNotEmpty && data.every((list) => list.isNotEmpty && list.every((item) => item is String));
   }
 
   Future<bool> isCacheValid() async {
     try {
+      if (!await _isVersionValid()) {
+        return false;
+      }
       final prefs = await SharedPreferences.getInstance();
       return prefs.containsKey(_cacheKey);
     } catch (e) {
       _logger.warning('Error checking cache validity: $e');
       return false;
     }
+  }
+
+  Future<void> _saveCurrentVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_versionKey, packageInfo.version);
+  }
+
+  Future<bool> _isVersionValid() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    final prefs = await SharedPreferences.getInstance();
+    final cachedVersion = prefs.getString(_versionKey);
+    return cachedVersion == packageInfo.version;
   }
 }
