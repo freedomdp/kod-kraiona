@@ -64,6 +64,11 @@ class AppTheme {
     color: secondaryTextColor,
   );
 
+  static const TextStyle errorMessageStyle = TextStyle(
+    fontSize: 16,
+    color: errorColor,
+  );
+
   // Стили кнопок
   static ButtonStyle get primaryButtonStyle {
     return ElevatedButton.styleFrom(

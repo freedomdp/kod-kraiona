@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kod_kraiona/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'app.dart';
 import 'services/google_sheets_service.dart';
@@ -29,11 +30,13 @@ void main() async {
 
     final cacheService = CacheService();
     GoogleSheetsRepository? googleSheetsRepository;
+    await cacheService.checkAndFixCache();
 
     if (await NetworkUtils.checkInternetConnection()) {
       logger.info('Initializing GoogleSheetsService...');
       final googleSheetsService = await GoogleSheetsService.getInstance();
-      googleSheetsRepository = GoogleSheetsRepository(googleSheetsService, cacheService);
+      googleSheetsRepository =
+          GoogleSheetsRepository(googleSheetsService, cacheService);
 
       logger.info('Loading initial data...');
       await googleSheetsRepository.getAllData(forceRefresh: true);
@@ -76,11 +79,17 @@ void main() async {
     runApp(ErrorApp(error: e.toString()));
   }
 }
-class ErrorApp extends StatelessWidget {
+
+class ErrorApp extends StatefulWidget {
   final String error;
 
   const ErrorApp({super.key, required this.error});
 
+  @override
+  _ErrorAppState createState() => _ErrorAppState();
+}
+
+class _ErrorAppState extends State<ErrorApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -89,13 +98,26 @@ class ErrorApp extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Error: $error'),
+              Text(
+                'Помилка: ${widget.error}',
+                style: AppTheme.errorMessageStyle,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppTheme.padding),
               ElevatedButton(
-                onPressed: () {
-                  // Перезапуск приложения
-                  main();
+                onPressed: () async {
+                  final cacheService = CacheService();
+                  await cacheService.clearCache();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Кеш очищено. Спробуйте знову.')),
+                    );
+                    // Перезапуск приложения
+                    main();
+                  }
                 },
-                child: const Text('Retry'),
+                child: const Text('Очистити кеш і спробувати знову'),
               ),
             ],
           ),

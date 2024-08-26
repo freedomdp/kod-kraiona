@@ -34,7 +34,8 @@ class CacheService {
       final jsonData = prefs.getString(_cacheKey);
       if (jsonData != null) {
         final List<dynamic> decodedData = json.decode(jsonData);
-        final result = decodedData.map((item) => List<String>.from(item)).toList();
+        final result =
+            decodedData.map((item) => List<String>.from(item)).toList();
         if (_isValidData(result)) {
           _logger.info('Cache data retrieved successfully');
           return result;
@@ -62,7 +63,7 @@ class CacheService {
   }
 
   bool _isValidData(List<List<String>> data) {
-    return data.isNotEmpty && data.every((list) => list.isNotEmpty && list.every((item) => item is String));
+    return data.isNotEmpty && data.every((list) => list.isNotEmpty);
   }
 
   Future<bool> isCacheValid() async {
@@ -89,5 +90,44 @@ class CacheService {
     final prefs = await SharedPreferences.getInstance();
     final cachedVersion = prefs.getString(_versionKey);
     return cachedVersion == packageInfo.version;
+  }
+
+  Future<void> checkAndFixCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonData = prefs.getString(_cacheKey);
+      if (jsonData != null) {
+        try {
+          json.decode(jsonData);
+        } catch (e) {
+          _logger.warning('Invalid JSON in cache, attempting to fix');
+          final fixedJson = _fixInvalidJson(jsonData);
+          if (fixedJson != null) {
+            await prefs.setString(_cacheKey, fixedJson);
+            _logger.info('Cache JSON fixed and saved');
+          } else {
+            await clearCache();
+            _logger.info('Unable to fix cache, cleared instead');
+          }
+        }
+      }
+    } catch (e) {
+      _logger.severe('Error checking and fixing cache: $e');
+      await clearCache();
+    }
+  }
+
+  String? _fixInvalidJson(String invalidJson) {
+    try {
+      final trimmed = invalidJson.trim();
+      if (trimmed.endsWith(',]')) {
+        return '${trimmed.substring(0, trimmed.length - 2)}]';
+      } else if (trimmed.endsWith(',}')) {
+        return '${trimmed.substring(0, trimmed.length - 2)}}';
+      }
+    } catch (e) {
+      _logger.warning('Error while trying to fix JSON: $e');
+    }
+    return null;
   }
 }

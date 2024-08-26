@@ -67,6 +67,7 @@ class PhrasesScreen extends StatelessWidget {
                               : PhrasesTableWidget(
                                   phrases: state.isSearching ? state.searchResults : state.phrases,
                                   hasReachedMax: state.hasReachedMax,
+                                  isSearchResult: state.isSearching,
                                   onLoadMore: () async {
                                     if (!state.isSearching && !state.hasReachedMax) {
                                       context.read<PhrasesBloc>().add(LoadMorePhrases());

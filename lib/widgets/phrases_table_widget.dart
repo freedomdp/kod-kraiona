@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 class PhrasesTableWidget extends StatefulWidget {
   final List<List<String>> phrases;
   final Function() onLoadMore;
   final bool hasReachedMax;
+  final bool isSearchResult;
 
   const PhrasesTableWidget({
     super.key,
     required this.phrases,
     required this.onLoadMore,
     required this.hasReachedMax,
+    this.isSearchResult = false,
   });
 
   @override
@@ -53,26 +56,49 @@ class _PhrasesTableWidgetState extends State<PhrasesTableWidget> {
     }
   }
 
+  void _copySearchResults() {
+    final phrases = widget.phrases.map((phrase) => phrase[0]).join(', ');
+    Clipboard.setData(ClipboardData(text: phrases));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Фрази скопійовано до буферу обміну')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: widget.phrases.length + 2, // +1 для заголовка, +1 для индикатора загрузки
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return _buildTableHeader();
-        } else if (index == widget.phrases.length + 1) {
-          return _isLoadingMore
-              ? const Center(child: CircularProgressIndicator())
-              : widget.hasReachedMax
-                  ? const Center(child: Text('Больше данных нет'))
-                  : const SizedBox.shrink();
-        } else {
-          final phraseIndex = index - 1;
-          final phrase = widget.phrases[phraseIndex];
-          return _buildTableRow(phrase);
-        }
-      },
+    return Column(
+      children: [
+        if (widget.isSearchResult && widget.phrases.isNotEmpty)
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.copy),
+              onPressed: _copySearchResults,
+              tooltip: 'Скопіювати результати',
+            ),
+          ),
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            itemCount: widget.phrases.length + 2,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return _buildTableHeader();
+              } else if (index == widget.phrases.length + 1) {
+                return _isLoadingMore
+                    ? const Center(child: CircularProgressIndicator())
+                    : widget.hasReachedMax
+                        ? const Center(child: Text('Більше даних немає'))
+                        : const SizedBox.shrink();
+              } else {
+                final phraseIndex = index - 1;
+                final phrase = widget.phrases[phraseIndex];
+                return _buildTableRow(phrase);
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 
